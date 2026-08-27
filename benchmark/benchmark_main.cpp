@@ -1,0 +1,12 @@
+#include <benchmark/benchmark.h>
+
+static void BM_Example(benchmark::State& state)
+{
+    for (auto _ : state)
+    {
+        benchmark::DoNotOptimize(state.iterations());
+    }
+}
+
+BENCHMARK(BM_Example);
+BENCHMARK_MAIN();
