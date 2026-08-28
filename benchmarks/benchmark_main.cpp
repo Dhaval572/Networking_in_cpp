@@ -9,5 +9,4 @@ static void BM_Example(benchmark::State &state)
 }
 
 BENCHMARK(BM_Example);
-
 BENCHMARK_MAIN();
