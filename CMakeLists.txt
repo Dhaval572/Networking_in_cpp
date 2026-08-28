@@ -3,11 +3,8 @@ cmake_minimum_required(VERSION 3.25)
 # === vcpkg Auto-Bootstrap ===
 # Step 1: Resolve VCPKG_ROOT - check env, then default locations, then bootstrap
 if(NOT DEFINED ENV{VCPKG_ROOT} OR NOT EXISTS "$ENV{VCPKG_ROOT}/vcpkg")
-  # Check default install locations
   if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     set(_VCPKG_DEFAULT "C:/vcpkg")
-  elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
-    set(_VCPKG_DEFAULT "$ENV{HOME}/vcpkg")
   else()
     set(_VCPKG_DEFAULT "$ENV{HOME}/vcpkg")
   endif()
@@ -19,7 +16,6 @@ if(NOT DEFINED ENV{VCPKG_ROOT} OR NOT EXISTS "$ENV{VCPKG_ROOT}/vcpkg")
     message(STATUS "vcpkg not found. Installing...")
 
     find_program(_GIT git REQUIRED)
-
     execute_process(
             COMMAND
                 ${_GIT}
