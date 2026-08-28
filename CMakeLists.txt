@@ -1,15 +1,16 @@
 cmake_minimum_required(VERSION 3.25)
 
-# === vcpkg Auto-Bootstrap ===
-# Step 1: Resolve VCPKG_ROOT - check env, then default locations, then bootstrap
-if(NOT DEFINED ENV{VCPKG_ROOT} OR NOT EXISTS "$ENV{VCPKG_ROOT}/vcpkg")
-  if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    set(_VCPKG_DEFAULT "C:/vcpkg")
-  else()
-    set(_VCPKG_DEFAULT "$ENV{HOME}/vcpkg")
-  endif()
+# vcpkg installaton and setup
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+  set(_VCPKG_EXE "vcpkg.exe")
+  set(_VCPKG_DEFAULT "C:/vcpkg")
+else()
+  set(_VCPKG_EXE "vcpkg")
+  set(_VCPKG_DEFAULT "$ENV{HOME}/vcpkg")
+endif()
 
-  if(EXISTS "${_VCPKG_DEFAULT}/vcpkg")
+if(NOT DEFINED ENV{VCPKG_ROOT} OR NOT EXISTS "$ENV{VCPKG_ROOT}/${_VCPKG_EXE}")
+  if(EXISTS "${_VCPKG_DEFAULT}/${_VCPKG_EXE}")
     set(ENV{VCPKG_ROOT} "${_VCPKG_DEFAULT}")
     message(STATUS "Auto-detected vcpkg at ${_VCPKG_DEFAULT}")
   else()
@@ -48,7 +49,6 @@ if(NOT CMAKE_TOOLCHAIN_FILE)
       CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
     )
 endif()
-# === End vcpkg Auto-Bootstrap ===
 
 set(PROJECT_NAME main)
 
@@ -109,7 +109,17 @@ target_compile_definitions(
     ${PROJECT_NAME}
     PRIVATE
         ASIO_STANDALONE
+        _WIN32_WINNT=0x0601
 )
+
+if(WIN32)
+  target_link_libraries(
+        ${PROJECT_NAME}
+        PRIVATE
+            ws2_32
+            mswsock
+    )
+endif()
 
 add_executable(
     ${PROJECT_NAME}_benchmarks
