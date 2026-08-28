@@ -3,38 +3,54 @@ cmake_minimum_required(VERSION 3.25)
 # === vcpkg Auto-Bootstrap ===
 # Step 1: Resolve VCPKG_ROOT - check env, then default locations, then bootstrap
 if(NOT DEFINED ENV{VCPKG_ROOT} OR NOT EXISTS "$ENV{VCPKG_ROOT}/vcpkg")
-    # Check default install locations
+  # Check default install locations
+  if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+    set(_VCPKG_DEFAULT "C:/vcpkg")
+  elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+    set(_VCPKG_DEFAULT "$ENV{HOME}/vcpkg")
+  else()
+    set(_VCPKG_DEFAULT "$ENV{HOME}/vcpkg")
+  endif()
+
+  if(EXISTS "${_VCPKG_DEFAULT}/vcpkg")
+    set(ENV{VCPKG_ROOT} "${_VCPKG_DEFAULT}")
+    message(STATUS "Auto-detected vcpkg at ${_VCPKG_DEFAULT}")
+  else()
+    message(STATUS "vcpkg not found. Installing...")
+
+    find_program(_GIT git REQUIRED)
+
+    execute_process(
+            COMMAND
+                ${_GIT}
+                clone
+                https://github.com/microsoft/vcpkg.git
+                "${_VCPKG_DEFAULT}"
+        )
+
     if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-        set(_VCPKG_DEFAULT "C:/vcpkg")
-    elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
-        set(_VCPKG_DEFAULT "$ENV{HOME}/vcpkg")
+      execute_process(
+                COMMAND
+                    "${_VCPKG_DEFAULT}/bootstrap-vcpkg.bat"
+                    -disableMetrics
+            )
     else()
-        set(_VCPKG_DEFAULT "$ENV{HOME}/vcpkg")
+      execute_process(
+                COMMAND
+                    "${_VCPKG_DEFAULT}/bootstrap-vcpkg.sh"
+                    -disableMetrics
+            )
     endif()
 
-    if(EXISTS "${_VCPKG_DEFAULT}/vcpkg")
-        set(ENV{VCPKG_ROOT} "${_VCPKG_DEFAULT}")
-        message(STATUS "Auto-detected vcpkg at ${_VCPKG_DEFAULT}")
-    else()
-        message(STATUS "vcpkg not found. Installing...")
-
-        find_program(_GIT git REQUIRED)
-
-        execute_process(COMMAND ${_GIT} clone https://github.com/microsoft/vcpkg.git "${_VCPKG_DEFAULT}")
-
-        if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-            execute_process(COMMAND "${_VCPKG_DEFAULT}/bootstrap-vcpkg.bat" -disableMetrics)
-        else()
-            execute_process(COMMAND "${_VCPKG_DEFAULT}/bootstrap-vcpkg.sh" -disableMetrics)
-        endif()
-
-        set(ENV{VCPKG_ROOT} "${_VCPKG_DEFAULT}")
-        message(STATUS "vcpkg installed at ${_VCPKG_DEFAULT}")
-    endif()
+    set(ENV{VCPKG_ROOT} "${_VCPKG_DEFAULT}")
+    message(STATUS "vcpkg installed at ${_VCPKG_DEFAULT}")
+  endif()
 endif()
 
 if(NOT CMAKE_TOOLCHAIN_FILE)
-    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+  set(
+      CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+    )
 endif()
 # === End vcpkg Auto-Bootstrap ===
 
