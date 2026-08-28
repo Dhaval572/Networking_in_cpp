@@ -34,7 +34,7 @@ target_compile_options(
             -Wall
             -Wextra
             -Wpedantic
-            -Werror
+            # -Werror # Not needed in learning face
         >
         $<$<CXX_COMPILER_ID:MSVC>:
             /W4
